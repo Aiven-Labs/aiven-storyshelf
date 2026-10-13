@@ -12,32 +12,32 @@ importers:
         specifier: ^1.17.0
         version: 1.19.17(hono@4.13.13)
       '@storyshelf/app':
-        specifier: 0.6.1
-        version: 0.6.1(kysely@0.29.6)(postgres@3.4.9)
+        specifier: 0.6.2
+        version: 0.6.2(kysely@0.29.6)(postgres@3.4.9)
       '@storyshelf/auth':
-        specifier: 0.6.1
-        version: 0.6.1(@better-auth/core@1.7.6(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.2)(@opentelemetry/api@1.9.1)(better-call@1.4.0(zod@4.6.5))(jose@6.2.12)(kysely@0.29.6)(nanostores@1.5.4))(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.2)(@opentelemetry/api@1.9.1)(better-call@1.4.0(zod@4.6.5))(kysely@0.29.6)(nanostores@1.5.4)(postgres@3.4.9)
+        specifier: 0.6.2
+        version: 0.6.2(@better-auth/core@1.7.6(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.2)(@opentelemetry/api@1.9.1)(better-call@1.4.0(zod@4.6.5))(jose@6.2.12)(kysely@0.29.6)(nanostores@1.5.4))(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.2)(@opentelemetry/api@1.9.1)(better-call@1.4.0(zod@4.6.5))(kysely@0.29.6)(nanostores@1.5.4)(postgres@3.4.9)
       '@storyshelf/core':
-        specifier: 0.6.1
-        version: 0.6.1(kysely@0.29.6)(postgres@3.4.9)
+        specifier: 0.6.2
+        version: 0.6.2(kysely@0.29.6)(postgres@3.4.9)
       '@storyshelf/db-postgres':
-        specifier: 0.6.1
-        version: 0.6.1(@opentelemetry/api@1.9.1)(kysely@0.29.6)
+        specifier: 0.6.2
+        version: 0.6.2(@opentelemetry/api@1.9.1)(kysely@0.29.6)
       '@storyshelf/git-github':
-        specifier: 0.6.1
-        version: 0.6.1(kysely@0.29.6)(postgres@3.4.9)
+        specifier: 0.6.2
+        version: 0.6.2(kysely@0.29.6)(postgres@3.4.9)
       '@storyshelf/notify-chat':
-        specifier: 0.6.1
-        version: 0.6.1(kysely@0.29.6)(postgres@3.4.9)
+        specifier: 0.6.2
+        version: 0.6.2(kysely@0.29.6)(postgres@3.4.9)
       '@storyshelf/observability':
-        specifier: 0.6.1
-        version: 0.6.1(kysely@0.29.6)(postgres@3.4.9)
+        specifier: 0.6.2
+        version: 0.6.2(kysely@0.29.6)(postgres@3.4.9)
       '@storyshelf/runner-playwright':
-        specifier: 0.6.1
-        version: 0.6.1(kysely@0.29.6)(postgres@3.4.9)
+        specifier: 0.6.2
+        version: 0.6.2(kysely@0.29.6)(postgres@3.4.9)
       '@storyshelf/storage-local':
-        specifier: 0.6.1
-        version: 0.6.1(kysely@0.29.6)(postgres@3.4.9)
+        specifier: 0.6.2
+        version: 0.6.2(kysely@0.29.6)(postgres@3.4.9)
       postgres:
         specifier: ^3.4.9
         version: 3.4.9
@@ -478,20 +478,25 @@ packages:
   '@standard-schema/spec@1.1.0':
     resolution: {integrity: sha512-l2aFy5jALhniG5HgqrD6jXLi/rUWrKvqN/qJx6yoJsgKhblVd+iqqU4RCXavm/jPityDo5TCvKMnpjKnOriy0w==}
 
-  '@storyshelf/affected@0.6.1':
-    resolution: {integrity: sha512-WPKfd/9yYoQz25Nu+EPlLtYeAL3hRj5ZDxH31L3NOcDfpHDlR7upW38aQ3VM1S0Cc/V4GBO/tUZL32tSq/yB6w==}
+  '@storyshelf/affected@0.6.2':
+    resolution: {integrity: sha512-Afg0QK7ktFfiitdR2uLSngf9Et7NnMRKzZ7pVEB5Cp7ZSvsRazYGzkvEeIgHxlBy8IQIZni7fihwMuBTmsDgNQ==}
+    engines: {node: '>=24'}
 
-  '@storyshelf/app@0.6.1':
-    resolution: {integrity: sha512-qs4+4ipbMfuVoI3AQJsUrXeoMSC93oBG9ATvzdNJYX4A5BB8SMD/BY41aaGz7mPvFpoc24ErWZSQ8kNTItuNDQ==}
+  '@storyshelf/app@0.6.2':
+    resolution: {integrity: sha512-tBfudQor5S943G1yKcQ/3bWWu6m3v4gRM9uq5Qs28bsUMD2aTRzJL5ocNLyOl9OIIvTxs6g1jc4yMzoWSYEUEg==}
+    engines: {node: '>=24'}
 
-  '@storyshelf/auth@0.6.1':
-    resolution: {integrity: sha512-nJk7ItvuTYf6/EslR5N+9Cso8Dqirql3RLOMdOKe9uCSzyXdd4Jut3XpUEw2Oa3S7kIEgE4paLwpv4QSsnh+SQ==}
+  '@storyshelf/auth@0.6.2':
+    resolution: {integrity: sha512-jqmGuGoWr/bPpRWfqptizj/ovOnRrAdnHHBiGuKgA5fnd050XLxfu764ZxIj/76qSazZmmQbV69CAXwZRRMfzQ==}
+    engines: {node: '>=24'}
 
-  '@storyshelf/core@0.6.1':
-    resolution: {integrity: sha512-w8v6/mnPfiRcg96SpwZcXUtIaWh47VQ7JzMVpS+AvPnPxAOZzysvrF5QZu9HFjTdNxzw+fF7G3X+AO3D9LM1/A==}
+  '@storyshelf/core@0.6.2':
+    resolution: {integrity: sha512-gm9iBeJn+iMSIGfsGShtWSgzh9EzPE/BfE0fUmM9UbgU8oHQDi4Mz/26t2CWDbh11nnYTbAEAo6/ABSVdc5BoA==}
+    engines: {node: '>=24'}
 
-  '@storyshelf/db-postgres@0.6.1':
-    resolution: {integrity: sha512-OLbCIs7WSpiJWLBEsqq64fgI8MbrZe5y2qwyMvTaD68sPAnCbQJ7L3UwPzebYdoASuQD3KRQ8d555yqpcpD/Hg==}
+  '@storyshelf/db-postgres@0.6.2':
+    resolution: {integrity: sha512-4DpEhD47CM4M/Bgv95HY2zI+AoViPpsvZQLzRNVqgaW7lX04INja9ONi23yTRLkAr6rYRHan8c5mrevjG0pj0Q==}
+    engines: {node: '>=24'}
     peerDependencies:
       '@electric-sql/pglite': ^0.5.8
       '@neondatabase/serverless': ^1.1.0
@@ -507,20 +512,25 @@ packages:
       pg:
         optional: true
 
-  '@storyshelf/git-github@0.6.1':
-    resolution: {integrity: sha512-zi90KCZA+sqLKLSWupL0vCOdRVgxTYdkGYiFti4PF+XbL1PfiE0SmsG8iAuZoMQZS+LAuoh/PxbGVjZeHCHQiw==}
+  '@storyshelf/git-github@0.6.2':
+    resolution: {integrity: sha512-eBirIGxzqEbxvihs/t3XHKm4r55oLC2/R1c0wd4/NjkHxNHudZvf1vI0Cksmn+ZZFxKW2H5fum1UHfRNYHv7hw==}
+    engines: {node: '>=24'}
 
-  '@storyshelf/notify-chat@0.6.1':
-    resolution: {integrity: sha512-rUOQvxC4xmENr343ZLgL3vYgeuijRUwngRUl5vtWo/f4Kvta97Oc3Up2vo2jyJ0pUiZsae5fKpYMB/SChVnuUA==}
+  '@storyshelf/notify-chat@0.6.2':
+    resolution: {integrity: sha512-JoggPgvM5BfeoMLHasRVZYbEPe0mq9xiG/pXh/3rRCMwG2nSViXqO3OBIo/7kL4uByccZWSlNmbgNPPAmDeqlw==}
+    engines: {node: '>=24'}
 
-  '@storyshelf/observability@0.6.1':
-    resolution: {integrity: sha512-lA+cO5T7v6CgTZPNMPpZspJ9u+zu0gUdKE5ZRLdNKm/uwer3iVFZCatE/a5uy931Kavhi5k8Vs68QYBS0Y0t5g==}
+  '@storyshelf/observability@0.6.2':
+    resolution: {integrity: sha512-3TdU1fSKuN8OyVSuMOUAnjNaK/5T3WVGKS4zgtRs/5A3Cp2B+m+bSLcQj1ahP3nO4+AoGG2eu0mc7fymnsebuw==}
+    engines: {node: '>=24'}
 
-  '@storyshelf/runner-playwright@0.6.1':
-    resolution: {integrity: sha512-DZSm7f4MqsQo8VefHyTWCZb56v/Vfcrno3C+aYXN5KwsX+1Rnyh/Hbv0oPtZKoELXt3pDJXMDIXZ3Vd4us+pEA==}
+  '@storyshelf/runner-playwright@0.6.2':
+    resolution: {integrity: sha512-HyxOu8gVg9NLqcOgmMHRd/nehzOCSo1qFesq0Skl6ttv/iw11f+7rDmMWK1+Q2Q5GRMe96RsmOXSr5nY2RHoEA==}
+    engines: {node: '>=24'}
 
-  '@storyshelf/storage-local@0.6.1':
-    resolution: {integrity: sha512-sy3UtBEFtECrZVHdkZ6/aRr3+RyUoRUFgHSERS3zpi8H1BxIGH1m4c5lHCABsAO3gH2fPrGU2FcHADZ38U6Djw==}
+  '@storyshelf/storage-local@0.6.2':
+    resolution: {integrity: sha512-5PKohchmfnQA8vazqFtOQHPkF1jP9CVY5H/U3VrFD2F1S8ZJ+cgCvQwaQuNT/7Dm31waOXVlkNfmg9P1GhS9Ww==}
+    engines: {node: '>=24'}
 
   '@types/node@26.6.4':
     resolution: {integrity: sha512-ldVPDCzj7fsaGZrLB0NuHuTvJcsNasysBAqMolr/cgxrLd1xbqxIr3XJiPnHHJUCxj5sNF1vnRj9aWnrVh5Jcg==}
@@ -1669,14 +1679,14 @@ snapshots:
 
   '@standard-schema/spec@1.1.0': {}
 
-  '@storyshelf/affected@0.6.1': {}
+  '@storyshelf/affected@0.6.2': {}
 
-  '@storyshelf/app@0.6.1(kysely@0.29.6)(postgres@3.4.9)':
+  '@storyshelf/app@0.6.2(kysely@0.29.6)(postgres@3.4.9)':
     dependencies:
       '@hono/swagger-ui': 0.6.1(hono@4.13.13)
       '@hono/zod-openapi': 1.6.3(hono@4.13.13)(zod@4.6.5)
-      '@storyshelf/core': 0.6.1(kysely@0.29.6)(postgres@3.4.9)
-      '@storyshelf/observability': 0.6.1(kysely@0.29.6)(postgres@3.4.9)
+      '@storyshelf/core': 0.6.2(kysely@0.29.6)(postgres@3.4.9)
+      '@storyshelf/observability': 0.6.2(kysely@0.29.6)(postgres@3.4.9)
       hono: 4.13.13
       zod: 4.6.5
     transitivePeerDependencies:
@@ -1710,11 +1720,11 @@ snapshots:
       - sqlite3
       - supports-color
 
-  '@storyshelf/auth@0.6.1(@better-auth/core@1.7.6(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.2)(@opentelemetry/api@1.9.1)(better-call@1.4.0(zod@4.6.5))(jose@6.2.12)(kysely@0.29.6)(nanostores@1.5.4))(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.2)(@opentelemetry/api@1.9.1)(better-call@1.4.0(zod@4.6.5))(kysely@0.29.6)(nanostores@1.5.4)(postgres@3.4.9)':
+  '@storyshelf/auth@0.6.2(@better-auth/core@1.7.6(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.2)(@opentelemetry/api@1.9.1)(better-call@1.4.0(zod@4.6.5))(jose@6.2.12)(kysely@0.29.6)(nanostores@1.5.4))(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.2)(@opentelemetry/api@1.9.1)(better-call@1.4.0(zod@4.6.5))(kysely@0.29.6)(nanostores@1.5.4)(postgres@3.4.9)':
     dependencies:
       '@better-auth/passkey': 1.7.6(@better-auth/core@1.7.6(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.2)(@opentelemetry/api@1.9.1)(better-call@1.4.0(zod@4.6.5))(jose@6.2.12)(kysely@0.29.6)(nanostores@1.5.4))(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.2)(better-auth@1.7.6(@opentelemetry/api@1.9.1))(better-call@1.4.0(zod@4.6.5))(nanostores@1.5.4)
       '@better-auth/sso': 1.7.6(@better-auth/core@1.7.6(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.2)(@opentelemetry/api@1.9.1)(better-call@1.4.0(zod@4.6.5))(jose@6.2.12)(kysely@0.29.6)(nanostores@1.5.4))(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.2)(better-auth@1.7.6(@opentelemetry/api@1.9.1))(better-call@1.4.0(zod@4.6.5))
-      '@storyshelf/core': 0.6.1(kysely@0.29.6)(postgres@3.4.9)
+      '@storyshelf/core': 0.6.2(kysely@0.29.6)(postgres@3.4.9)
       better-auth: 1.7.6(@opentelemetry/api@1.9.1)
       zod: 4.6.5
     transitivePeerDependencies:
@@ -1767,10 +1777,10 @@ snapshots:
       - vitest
       - vue
 
-  '@storyshelf/core@0.6.1(kysely@0.29.6)(postgres@3.4.9)':
+  '@storyshelf/core@0.6.2(kysely@0.29.6)(postgres@3.4.9)':
     dependencies:
       '@opentelemetry/api': 1.9.1
-      '@storyshelf/affected': 0.6.1
+      '@storyshelf/affected': 0.6.2
       drizzle-orm: 0.44.7(@opentelemetry/api@1.9.1)(kysely@0.29.6)(postgres@3.4.9)
       pino: 10.4.0
       pixelmatch: 7.2.0
@@ -1807,9 +1817,9 @@ snapshots:
       - sql.js
       - sqlite3
 
-  '@storyshelf/db-postgres@0.6.1(@opentelemetry/api@1.9.1)(kysely@0.29.6)':
+  '@storyshelf/db-postgres@0.6.2(@opentelemetry/api@1.9.1)(kysely@0.29.6)':
     dependencies:
-      '@storyshelf/core': 0.6.1(kysely@0.29.6)(postgres@3.4.9)
+      '@storyshelf/core': 0.6.2(kysely@0.29.6)(postgres@3.4.9)
       drizzle-orm: 0.44.7(@opentelemetry/api@1.9.1)(kysely@0.29.6)(postgres@3.4.9)
       postgres: 3.4.9
     transitivePeerDependencies:
@@ -1838,9 +1848,9 @@ snapshots:
       - sql.js
       - sqlite3
 
-  '@storyshelf/git-github@0.6.1(kysely@0.29.6)(postgres@3.4.9)':
+  '@storyshelf/git-github@0.6.2(kysely@0.29.6)(postgres@3.4.9)':
     dependencies:
-      '@storyshelf/core': 0.6.1(kysely@0.29.6)(postgres@3.4.9)
+      '@storyshelf/core': 0.6.2(kysely@0.29.6)(postgres@3.4.9)
       zod: 4.6.5
     transitivePeerDependencies:
       - '@aws-sdk/client-rds-data'
@@ -1872,9 +1882,9 @@ snapshots:
       - sql.js
       - sqlite3
 
-  '@storyshelf/notify-chat@0.6.1(kysely@0.29.6)(postgres@3.4.9)':
+  '@storyshelf/notify-chat@0.6.2(kysely@0.29.6)(postgres@3.4.9)':
     dependencies:
-      '@storyshelf/core': 0.6.1(kysely@0.29.6)(postgres@3.4.9)
+      '@storyshelf/core': 0.6.2(kysely@0.29.6)(postgres@3.4.9)
       zod: 4.6.5
     transitivePeerDependencies:
       - '@aws-sdk/client-rds-data'
@@ -1906,7 +1916,7 @@ snapshots:
       - sql.js
       - sqlite3
 
-  '@storyshelf/observability@0.6.1(kysely@0.29.6)(postgres@3.4.9)':
+  '@storyshelf/observability@0.6.2(kysely@0.29.6)(postgres@3.4.9)':
     dependencies:
       '@hono/otel': 1.2.0(hono@4.13.13)
       '@opentelemetry/api': 1.9.1
@@ -1914,7 +1924,7 @@ snapshots:
       '@opentelemetry/sdk-metrics': 2.11.0(@opentelemetry/api@1.9.1)
       '@opentelemetry/sdk-node': 0.222.0(@opentelemetry/api@1.9.1)
       '@opentelemetry/semantic-conventions': 1.43.0
-      '@storyshelf/core': 0.6.1(kysely@0.29.6)(postgres@3.4.9)
+      '@storyshelf/core': 0.6.2(kysely@0.29.6)(postgres@3.4.9)
       drizzle-orm: 0.44.7(@opentelemetry/api@1.9.1)(kysely@0.29.6)(postgres@3.4.9)
       hono: 4.13.13
     transitivePeerDependencies:
@@ -1948,9 +1958,9 @@ snapshots:
       - sqlite3
       - supports-color
 
-  '@storyshelf/runner-playwright@0.6.1(kysely@0.29.6)(postgres@3.4.9)':
+  '@storyshelf/runner-playwright@0.6.2(kysely@0.29.6)(postgres@3.4.9)':
     dependencies:
-      '@storyshelf/core': 0.6.1(kysely@0.29.6)(postgres@3.4.9)
+      '@storyshelf/core': 0.6.2(kysely@0.29.6)(postgres@3.4.9)
       playwright-core: 1.63.0
     transitivePeerDependencies:
       - '@aws-sdk/client-rds-data'
@@ -1982,9 +1992,9 @@ snapshots:
       - sql.js
       - sqlite3
 
-  '@storyshelf/storage-local@0.6.1(kysely@0.29.6)(postgres@3.4.9)':
+  '@storyshelf/storage-local@0.6.2(kysely@0.29.6)(postgres@3.4.9)':
     dependencies:
-      '@storyshelf/core': 0.6.1(kysely@0.29.6)(postgres@3.4.9)
+      '@storyshelf/core': 0.6.2(kysely@0.29.6)(postgres@3.4.9)
     transitivePeerDependencies:
       - '@aws-sdk/client-rds-data'
       - '@cloudflare/workers-types'
