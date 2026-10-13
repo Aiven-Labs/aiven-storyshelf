@@ -14,11 +14,12 @@
   },
   "dependencies": {
     "@hono/node-server": "^1.17.0",
+    "postgres": "^3.4.9",
     "@storyshelf/core": "0.6.1",
     "@storyshelf/app": "0.6.1",
     "@storyshelf/auth": "0.6.1",
     "@storyshelf/observability": "0.6.1",
-    "@storyshelf/db-sqlite": "0.6.1",
+    "@storyshelf/db-postgres": "0.6.1",
     "@storyshelf/runner-playwright": "0.6.1",
     "@storyshelf/git-github": "0.6.1",
     "@storyshelf/storage-local": "0.6.1",

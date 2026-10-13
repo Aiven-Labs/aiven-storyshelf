@@ -20,9 +20,9 @@ importers:
       '@storyshelf/core':
         specifier: 0.6.1
         version: 0.6.1(kysely@0.29.6)(postgres@3.4.9)
-      '@storyshelf/db-sqlite':
+      '@storyshelf/db-postgres':
         specifier: 0.6.1
-        version: 0.6.1(@opentelemetry/api@1.9.1)(kysely@0.29.6)(postgres@3.4.9)
+        version: 0.6.1(@opentelemetry/api@1.9.1)(kysely@0.29.6)
       '@storyshelf/git-github':
         specifier: 0.6.1
         version: 0.6.1(kysely@0.29.6)(postgres@3.4.9)
@@ -38,6 +38,9 @@ importers:
       '@storyshelf/storage-local':
         specifier: 0.6.1
         version: 0.6.1(kysely@0.29.6)(postgres@3.4.9)
+      postgres:
+        specifier: ^3.4.9
+        version: 3.4.9
     devDependencies:
       typescript:
         specifier: ^7.0.2
@@ -487,15 +490,21 @@ packages:
   '@storyshelf/core@0.6.1':
     resolution: {integrity: sha512-w8v6/mnPfiRcg96SpwZcXUtIaWh47VQ7JzMVpS+AvPnPxAOZzysvrF5QZu9HFjTdNxzw+fF7G3X+AO3D9LM1/A==}
 
-  '@storyshelf/db-sqlite@0.6.1':
-    resolution: {integrity: sha512-I40n+MQRDGAiTrxu/oRLXBenrTUXOXFfma2twlveurDEKAVd7LWt3cEh/mq9iybL+SLIA1T7bJukhdxeWagfCA==}
+  '@storyshelf/db-postgres@0.6.1':
+    resolution: {integrity: sha512-OLbCIs7WSpiJWLBEsqq64fgI8MbrZe5y2qwyMvTaD68sPAnCbQJ7L3UwPzebYdoASuQD3KRQ8d555yqpcpD/Hg==}
     peerDependencies:
-      '@libsql/client': ^0.18.0
-      better-sqlite3: ^12.0.0
+      '@electric-sql/pglite': ^0.5.8
+      '@neondatabase/serverless': ^1.1.0
+      '@vercel/postgres': ^0.10.0
+      pg: ^8.0.0
     peerDependenciesMeta:
-      '@libsql/client':
+      '@electric-sql/pglite':
         optional: true
-      better-sqlite3:
+      '@neondatabase/serverless':
+        optional: true
+      '@vercel/postgres':
+        optional: true
+      pg:
         optional: true
 
   '@storyshelf/git-github@0.6.1':
@@ -1798,16 +1807,16 @@ snapshots:
       - sql.js
       - sqlite3
 
-  '@storyshelf/db-sqlite@0.6.1(@opentelemetry/api@1.9.1)(kysely@0.29.6)(postgres@3.4.9)':
+  '@storyshelf/db-postgres@0.6.1(@opentelemetry/api@1.9.1)(kysely@0.29.6)':
     dependencies:
       '@storyshelf/core': 0.6.1(kysely@0.29.6)(postgres@3.4.9)
       drizzle-orm: 0.44.7(@opentelemetry/api@1.9.1)(kysely@0.29.6)(postgres@3.4.9)
+      postgres: 3.4.9
     transitivePeerDependencies:
       - '@aws-sdk/client-rds-data'
       - '@cloudflare/workers-types'
-      - '@electric-sql/pglite'
+      - '@libsql/client'
       - '@libsql/client-wasm'
-      - '@neondatabase/serverless'
       - '@op-engineering/op-sqlite'
       - '@opentelemetry/api'
       - '@planetscale/database'
@@ -1817,16 +1826,14 @@ snapshots:
       - '@types/pg'
       - '@types/sql.js'
       - '@upstash/redis'
-      - '@vercel/postgres'
       - '@xata.io/client'
+      - better-sqlite3
       - bun-types
       - expo-sqlite
       - gel
       - knex
       - kysely
       - mysql2
-      - pg
-      - postgres
       - prisma
       - sql.js
       - sqlite3
@@ -2273,8 +2280,7 @@ snapshots:
 
   pngjs@7.0.0: {}
 
-  postgres@3.4.9:
-    optional: true
+  postgres@3.4.9: {}
 
   process-nextick-args@2.0.1: {}
 
