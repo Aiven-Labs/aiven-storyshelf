@@ -16,7 +16,7 @@ Requires Node.js 24 or later and a Chromium for Playwright (`npx playwright-core
 
 ```sh
 pnpm install
-SECRET=change-me pnpm start
+SECRET=$(openssl rand -hex 32) AUTH_PASSWORD=a-long-admin-password pnpm start
 ```
 
 Use `pnpm dev` to restart on changes.
@@ -26,7 +26,9 @@ Use `pnpm dev` to restart on changes.
 ```sh
 docker build -t storyshelf .
 docker run -d --name storyshelf \
-  -e SECRET=change-me \
+  -e SECRET=$(openssl rand -hex 32) \
+  -e AUTH_PASSWORD=a-long-admin-password \
+  -e PUBLIC_BASE_URL=https://shelf.example.com \
   -p 3000:3000 \
   -v storyshelf-data:/data \
   storyshelf
@@ -48,19 +50,21 @@ Chromium is the main memory cost. In testing, the server idled at about 110MiB a
 |---|---|---|
 | `PORT` | `3000` | HTTP port. |
 | `DATA_DIR` | `./data` (`/data` in Docker) | Holds `shelf.db` and uploaded builds. Mount a volume here. |
-| `SECRET` | none | Secret used to encrypt stored credentials. Set it in production. |
+| `SECRET` | required | Signs sessions and encrypts stored credentials. Use at least 32 characters. |
+| `AUTH_PASSWORD` | required | Password for the local admin account (at least 12 characters). Re-applied on every boot. |
+| `AUTH_EMAIL` | `admin@example.com` | Email of the local admin account. |
+| `PUBLIC_BASE_URL` | `http://localhost:$PORT` | Public URL of the server. Set it when deployed behind a hostname. |
 | `OTEL_EXPORTER_OTLP_ENDPOINT` | none | Enables OpenTelemetry export when set. |
 
-Authentication is off by default, so every route is open. Do not expose the server publicly without configuring auth.
+Local email/password accounts are always on, and the server refuses to start without `SECRET` and `AUTH_PASSWORD`. Sign in as the admin, create projects and CI tokens in the UI, and invite other users from there.
 
 ## Uploading a build
 
-Create a project, then upload a built Storybook with the [StoryShelf CLI](https://github.com/GuptaSiddhant/StoryShelf/tree/main/packages/cli):
+Sign in as the admin, create a project and a CI token from the project settings, then upload a built Storybook with the [StoryShelf CLI](https://github.com/GuptaSiddhant/StoryShelf/tree/main/packages/cli):
 
 ```sh
-npx storyshelf create --url http://localhost:3000 --name my-app --token <admin-token>
-npx storyshelf upload --url http://localhost:3000 --slug my-app --token <ci-token> \
+npx storyshelf upload --url https://shelf.example.com --slug my-app --token <ci-token> \
   --sha "$(git rev-parse HEAD)" --branch main
 ```
 
-With auth disabled (the default here), a CI token has only viewer access and the server rejected the CLI upload with a 403 in testing. Configure auth before relying on the CLI.
+Create the token while signed in. A token created without a signed-in user only has viewer access and uploads fail with 403.
