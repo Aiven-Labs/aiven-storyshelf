@@ -2,6 +2,8 @@
   "include": ["./server/"],
   "compilerOptions": {
     "types": [],
+    "noEmit": true,
+    "allowImportingTsExtensions": true,
     "module": "nodenext",
     "moduleResolution": "nodenext",
   }
