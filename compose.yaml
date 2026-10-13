@@ -1,0 +1,16 @@
+services:
+  storyshelf:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      PORT: "3000"
+      DATA_DIR: /data
+    volumes:
+      # Uploaded builds and snapshots. The database only holds metadata pointing at these files.
+      - storyshelf_data:/data
+
+volumes:
+  storyshelf_data:
