@@ -1,0 +1,8 @@
+{
+  "include": ["./server/"],
+  "compilerOptions": {
+    "types": [],
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
+  }
+}
