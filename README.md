@@ -1,6 +1,6 @@
 # aiven-storyshelf
 
-Self-hosted [StoryShelf](https://github.com/GuptaSiddhant/StoryShelf) visual testing server. It uses Postgres for data, local-disk storage for uploads, and captures stories with Playwright Chromium.
+Self-hosted [StoryShelf](https://github.com/GuptaSiddhant/StoryShelf) visual testing server. It uses Postgres for data, S3-compatible object storage (Cloudflare R2) for builds and screenshots, and captures stories with Playwright Chromium.
 
 ## Layout
 
@@ -30,9 +30,11 @@ docker run -d --name storyshelf \
   -e SECRET=$(openssl rand -hex 32) \
   -e AUTH_PASSWORD=a-long-admin-password \
   -e DATABASE_URL=postgres://user:pass@host:5432/shelf?sslmode=require \
+  -e S3_BUCKET=storyshelf \
+  -e S3_ENDPOINT=https://<account-id>.r2.cloudflarestorage.com \
+  -e AWS_ACCESS_KEY_ID=... -e AWS_SECRET_ACCESS_KEY=... \
   -e PUBLIC_BASE_URL=https://shelf.example.com \
   -p 3000:3000 \
-  -v storyshelf-data:/data \
   storyshelf
 ```
 
@@ -52,14 +54,19 @@ Chromium is the main memory cost. In testing, the server idled at about 110MiB a
 |---|---|---|
 | `PORT` | `3000` | HTTP port. |
 | `DATABASE_URL` | required | Postgres connection string. Add `?sslmode=require` for managed Postgres. Migrations run on boot. |
-| `DATA_DIR` | `./data` (`/data` in Docker) | Holds uploaded builds and snapshots. Mount a persistent volume here. |
+| `S3_BUCKET` | required | Bucket for builds, screenshots and baselines. |
+| `S3_ENDPOINT` | AWS S3 | Set for R2: `https://<account-id>.r2.cloudflarestorage.com`. |
+| `S3_REGION` | `auto` | Use `auto` for R2. |
+| `S3_PREFIX` | none | Optional key prefix inside the bucket. |
+| `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` | required | S3 or R2 API token credentials. |
+| `DATA_DIR` | `./data` (`/data` in Docker) | Scratch space where uploaded Storybooks are unpacked during capture. It doesn't need to persist. |
 | `SECRET` | required | Signs sessions and encrypts stored credentials. Use at least 32 characters. |
 | `AUTH_PASSWORD` | required | Password for the local admin account (at least 12 characters). Re-applied on every boot. |
 | `AUTH_EMAIL` | `admin@example.com` | Email of the local admin account. |
 | `PUBLIC_BASE_URL` | `http://localhost:$PORT` | Public URL of the server. Set it when deployed behind a hostname. |
 | `OTEL_EXPORTER_OTLP_ENDPOINT` | none | Enables OpenTelemetry export when set. |
 
-Local email/password accounts are always on, and the server refuses to start without `SECRET`, `AUTH_PASSWORD` and `DATABASE_URL`. Sign in as the admin, create projects and CI tokens in the UI, and invite other users from there.
+Local email/password accounts are always on, and the server refuses to start without `SECRET`, `AUTH_PASSWORD`, `DATABASE_URL` and `S3_BUCKET`. Sign in as the admin, create projects and CI tokens in the UI, and invite other users from there.
 
 ## Uploading a build
 

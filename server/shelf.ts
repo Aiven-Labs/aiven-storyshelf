@@ -8,15 +8,16 @@ import { slackWebhookNotifier } from "@storyshelf/notify-chat/slack";
 import { otelLogMixin } from "@storyshelf/observability";
 import { initObservabilityFromEnv } from "@storyshelf/observability/node";
 import { createPlaywrightCaptureRunner } from "@storyshelf/runner-playwright";
-import { createLocalStorage } from "@storyshelf/storage-local";
+import { createS3Storage } from "@storyshelf/storage-s3";
 import postgres from "postgres";
 
 /** Adapters, logger and config for `createShelfApp`, built from environment config. */
 export async function createShelfOptions() {
   const secret = process.env.SECRET;
   const databaseUrl = process.env.DATABASE_URL;
-  if (!secret || !process.env.AUTH_PASSWORD || !databaseUrl) {
-    throw new Error("SECRET, AUTH_PASSWORD and DATABASE_URL must be set");
+  const bucket = process.env.S3_BUCKET;
+  if (!secret || !process.env.AUTH_PASSWORD || !databaseUrl || !bucket) {
+    throw new Error("SECRET, AUTH_PASSWORD, DATABASE_URL and S3_BUCKET must be set");
   }
   const port = Number(process.env.PORT) || 3000;
   const publicBaseUrl = process.env.PUBLIC_BASE_URL;
@@ -24,8 +25,18 @@ export async function createShelfOptions() {
   mkdirSync(dataDir, { recursive: true });
 
   // Adapters — swap these for your deployment
-  const storage = createLocalStorage(dataDir);
-  const database = createPostgresDatabase({ url: databaseUrl });
+  // S3-compatible storage (Cloudflare R2: S3_ENDPOINT=https://<account>.r2.cloudflarestorage.com, S3_REGION=auto).
+  // Credentials come from AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY.
+  const storage = createS3Storage({
+    bucket,
+    prefix: process.env.S3_PREFIX,
+    endpoint: process.env.S3_ENDPOINT,
+    region: process.env.S3_REGION || "auto",
+  });
+  // db-postgres passes `ssl: undefined` to postgres.js, which overrides `?sslmode=` in the URL, so set it here.
+  const sslmode = new URL(databaseUrl).searchParams.get("sslmode");
+  const ssl = sslmode && sslmode !== "disable" ? ("require" as unknown as boolean) : undefined;
+  const database = createPostgresDatabase({ url: databaseUrl, ssl });
   const captureRunner = createPlaywrightCaptureRunner();
 
   // Observability (noop unless OTEL_EXPORTER_OTLP_ENDPOINT is set).

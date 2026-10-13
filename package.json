@@ -22,7 +22,7 @@
     "@storyshelf/db-postgres": "0.6.2",
     "@storyshelf/runner-playwright": "0.6.2",
     "@storyshelf/git-github": "0.6.2",
-    "@storyshelf/storage-local": "0.6.2",
+    "@storyshelf/storage-s3": "0.6.2",
     "@storyshelf/notify-chat": "0.6.2"
   },
   "devDependencies": {
