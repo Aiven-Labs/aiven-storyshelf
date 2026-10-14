@@ -46,7 +46,19 @@ curl localhost:3000/api/v1/health
 
 ### Memory
 
-Chromium is the main memory cost. In testing, the server idled at about 110MiB and peaked at about 430MiB while capturing a 7-story Storybook, so 512MB is tight. Plan for 1GB. Large Storybooks are rendered in batches (see `CAPTURE_MAX_PAGES`), but every screenshot is held in memory until the render finishes, so memory still grows with the story count.
+**Run with at least 2GB of RAM.** Chromium is the main memory cost, and real design systems use far more than a small fixture:
+
+| Storybook | Container memory | Result |
+|---|---|---|
+| 7 stories | 1GB | Peak about 330-430MiB. |
+| 555 stories (heavy) | 1GB | Chromium pages crash (`Target crashed`) and the container is killed (OOM). |
+| 555 stories (heavy) | 2GB | All stories captured, no failures. Peak about 1.9GB. |
+
+Notes:
+- A project's first build has no baseline and renders every story, which is the heaviest case. Later builds render only the stories affected by the change.
+- Stories are rendered in batches of `CAPTURE_MAX_PAGES` pages at a time, so Chromium's memory stays bounded as the story count grows. Every screenshot is still held in memory until the render finishes, so memory grows with the story count.
+- A memory-starved capture can fail with no error in the UI. The build shows `Interrupted by server restart`, and the container log is the only place to see the cause. Check the app's memory graph if builds fail without a message.
+- To cut memory further, skip stories you don't need with `--skip <glob>` on `storyshelf upload`, or use fewer viewports.
 
 ## Configuration
 
