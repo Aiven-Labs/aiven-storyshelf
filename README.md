@@ -46,7 +46,7 @@ curl localhost:3000/api/v1/health
 
 ### Memory
 
-Chromium is the main memory cost. In testing, the server idled at about 110MiB and peaked at about 430MiB while capturing a 7-story Storybook, so 512MB is tight. Plan for 1GB.
+Chromium is the main memory cost. In testing, the server idled at about 110MiB and peaked at about 430MiB while capturing a 7-story Storybook, so 512MB is tight. Plan for 1GB. Large Storybooks are rendered in batches (see `CAPTURE_MAX_PAGES`), but every screenshot is held in memory until the render finishes, so memory still grows with the story count.
 
 ## Configuration
 
@@ -59,6 +59,7 @@ Chromium is the main memory cost. In testing, the server idled at about 110MiB a
 | `S3_REGION` | `auto` | Use `auto` for R2. |
 | `S3_PREFIX` | none | Optional key prefix inside the bucket. |
 | `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` | required | S3 or R2 API token credentials. |
+| `CAPTURE_MAX_PAGES` | `6` | Most story pages Chromium renders at once. Stories are captured in batches of this size, so peak memory stays flat for large Storybooks. Lower it if the container is killed mid-capture. |
 | `DATA_DIR` | `./data` (`/data` in Docker) | Scratch space where uploaded Storybooks are unpacked during capture. It doesn't need to persist. |
 | `SECRET` | required | Signs sessions and encrypts stored credentials. Use at least 32 characters. |
 | `AUTH_PASSWORD` | required | Password for the local admin account (at least 12 characters). Re-applied on every boot. |

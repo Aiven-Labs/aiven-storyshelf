@@ -10,6 +10,7 @@ import { initObservabilityFromEnv } from "@storyshelf/observability/node";
 import { createPlaywrightCaptureRunner } from "@storyshelf/runner-playwright";
 import { createS3Storage } from "@storyshelf/storage-s3";
 import postgres from "postgres";
+import { createBatchedCaptureRunner } from "./capture.ts";
 
 /** Adapters, logger and config for `createShelfApp`, built from environment config. */
 export async function createShelfOptions() {
@@ -40,7 +41,9 @@ export async function createShelfOptions() {
   const sslmode = new URL(databaseUrl).searchParams.get("sslmode");
   const ssl = sslmode && sslmode !== "disable" ? ("require" as unknown as boolean) : undefined;
   const database = createPostgresDatabase({ url: databaseUrl, ssl });
-  const captureRunner = createPlaywrightCaptureRunner();
+  // Max pages open at once per render batch; lower it if the container runs out of memory.
+  const maxPages = Number(process.env.CAPTURE_MAX_PAGES) || 6;
+  const captureRunner = createBatchedCaptureRunner(createPlaywrightCaptureRunner(), maxPages);
 
   // Observability (noop unless OTEL_EXPORTER_OTLP_ENDPOINT is set).
   const observability = await initObservabilityFromEnv();
