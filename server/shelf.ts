@@ -16,8 +16,11 @@ export async function createShelfOptions() {
   const secret = process.env.SECRET;
   const databaseUrl = process.env.DATABASE_URL;
   const bucket = process.env.S3_BUCKET;
-  if (!secret || !process.env.AUTH_PASSWORD || !databaseUrl || !bucket) {
-    throw new Error("SECRET, AUTH_PASSWORD, DATABASE_URL and S3_BUCKET must be set");
+  const missing = ["SECRET", "AUTH_PASSWORD", "DATABASE_URL", "S3_BUCKET"].filter(
+    (name) => !process.env[name],
+  );
+  if (missing.length > 0 || !secret || !databaseUrl || !bucket) {
+    throw new Error(`Missing required environment variables: ${missing.join(", ")}`);
   }
   const port = Number(process.env.PORT) || 3000;
   const publicBaseUrl = process.env.PUBLIC_BASE_URL;
