@@ -1,6 +1,6 @@
 # aiven-storyshelf
 
-Self-hosted [StoryShelf](https://github.com/GuptaSiddhant/StoryShelf) visual testing server. It uses Postgres for data, S3-compatible object storage (Cloudflare R2) for builds and screenshots, and captures stories with Playwright Chromium.
+Self-hosted [StoryShelf](https://github.com/GuptaSiddhant/StoryShelf) visual testing server. It uses Postgres for data, S3-compatible object storage (Cloudflare R2) for builds and screenshots, and captures stories with Chromium running on a **separate Playwright server** (remote browser target `chromium@grid`).
 
 ## Layout
 
@@ -8,7 +8,8 @@ Self-hosted [StoryShelf](https://github.com/GuptaSiddhant/StoryShelf) visual tes
 |---|---|
 | `server/index.ts` | Entrypoint: creates the app with `createShelfApp`, serves it with Hono and handles shutdown. |
 | `server/shelf.ts` | Adapters, logger, observability and config passed to `createShelfApp`. |
-| `Dockerfile` | Single-stage Node 24 image. Node runs the TypeScript directly, so there is no build step. |
+| `playwright-server/Dockerfile` | The Playwright server that runs Chromium. Pinned to the runner's `playwright-core` version. |
+| `Dockerfile` | Single-stage Node 24 image with no browsers installed (1.3GB). Node runs the TypeScript directly, so there is no build step. |
 
 ## Run locally
 
@@ -44,28 +45,37 @@ Check it is up:
 curl localhost:3000/api/v1/health
 ```
 
-### Memory and CPU
+### Remote browsers
 
-StoryShelf 0.7 sizes its own capture from the CPUs and memory it sees, so memory stays flat as the story count grows. Capture is **CPU-bound**: memory is not the limit. Measured with a 555-story design system (full capture, no failures in any run):
+This app installs no browser. The runner connects to a Playwright server (`playwright run-server`) over a WebSocket and renders there. Start the server (the image tag and `playwright@` version must equal the runner's `playwright-core`, 1.63.0 for StoryShelf 0.7):
 
-| Container | Pages at once | Time | Peak memory |
+```sh
+docker build -t pwserver ./playwright-server
+docker run -d --init --ipc=host --name pw --network <net> --cpus=2 --memory=4g \
+  -e PLAYWRIGHT_PATH=/<long-random-path> -e PLAYWRIGHT_MAX_CLIENTS=16 pwserver
+```
+
+Then run the app with `PLAYWRIGHT_SERVER_URL=ws://pw:3000/<long-random-path>` and `PLAYWRIGHT_SESSIONS=<pages at once>`. A bare `run-server` has no authentication: the path is its only gate, so keep the port on a private network (or put a proxy that checks a token in front and set `PLAYWRIGHT_SERVER_TOKEN`).
+
+New projects default to the local `chromium` target, which this runner does not offer. Set each project's capture target to `chromium@grid` (Settings → Capture, or `PATCH /api/v1/projects/<slug>` with `{"browser":"chromium@grid"}`) before uploading. The remote target has its own baselines, so existing local baselines are not reused.
+
+Measured with a 555-story design system, full capture, no failures (app host fixed at 1 vCPU / 1GB):
+
+| Playwright server(s) | Time | App host peak / avg CPU | Server peak memory / avg CPU |
 |---|---|---|---|
-| 1 vCPU, 2GB | auto | 793s | 923MiB |
-| 1 vCPU, 2GB | **2** | **618s** | 755MiB |
-| 1 vCPU, 2GB | 3 | 855s | 818MiB |
-| 2 vCPU, 4GB | auto | 391s | 1095MiB |
-| 2 vCPU, 4GB | **4** | **313s** | 942MiB |
-| 2 vCPU, 4GB | 8 | 304s | 1351MiB |
-| 2 vCPU, 4GB | auto, build split into 2 shards run in parallel | 384s | 910MiB |
+| 1 x (2 vCPU, 4GB), 4 sessions | 339s | 347MiB / 33% | 996MiB / 164% of 2 |
+| 1 x (1 vCPU, 2GB), 2 sessions | 731s | 341MiB / 19% | 666MiB / 84% |
+| 2 x (1 vCPU, 2GB) behind a load balancer, 4 sessions, **sharded** | 419s | 324MiB / 29% | 644MiB and 618MiB / 67% and 74% |
+| 2 x (1 vCPU, 2GB) behind a load balancer, 4 sessions, **not sharded** | 703s | 347MiB / 18% | 644MiB and 774MiB / 46% and 52% |
+
+For comparison, Chromium on the app host itself took 313s on 2 vCPU / 4GB and 618s on 1 vCPU / 2GB.
 
 Notes:
-- **Set the number of pages explicitly.** The automatic setting starts at one page per CPU. `STORYSHELF_CAPTURE_CONCURRENCY=2` on 1 vCPU and `=4` on 2 vCPU were 20-25% faster than auto. More than that does not help: 3 pages on 1 vCPU was slower than 2, and 8 pages on 2 vCPU used 400MiB more for 3% less time.
-- **Extra RAM is not used.** Every run peaked at or under about 1.35GB, so 2GB is plenty even on 2 vCPU. Pay for CPU, not memory.
-- **More CPU helps almost linearly:** 2 vCPU was about twice as fast as 1 vCPU.
-- **Sharding does not help on one host.** Splitting a build into shards only helps when shards run on different machines.
-- A project's first build has no baseline and renders every story. Later builds render only the affected stories, if the built Storybook includes `preview-stats.json` (see `storyshelf doctor`).
-- The render time budget scales with the number of captures (at least 15 minutes), so there is no timeout setting to change.
-- To cut work, skip stories with `--skip <glob>` on `storyshelf upload`, or use fewer viewports.
+- **Remote costs about 10-18% more time** than local Chromium on the same CPU, because every asset of every page crosses the WebSocket. The app host sent about 1.6GB to the server for these 555 stories.
+- **The app host stays small:** about 350MiB and 20-33% of one CPU, with the 1.3GB image. The server holds the browser load.
+- **`sessions` is the total pages rendered at once across all servers and shards.**
+- **Several servers only help when the build is sharded** (`CAPTURE_SHARD_SIZE`, with `CAPTURE_CONCURRENCY` shards in flight). Without shards the work effectively runs at one CPU of throughput. Behind a load balancer, put `least_conn` and WebSocket upgrade headers on the proxy.
+- **Total CPU matters most:** one 2 vCPU server beat two 1 vCPU servers, because the sharded run left each server at about 70% CPU.
 
 ## Configuration
 
@@ -78,7 +88,11 @@ Notes:
 | `S3_REGION` | `auto` | Use `auto` for R2. |
 | `S3_PREFIX` | none | Optional key prefix inside the bucket. |
 | `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` | required | S3 or R2 API token credentials. |
-| `STORYSHELF_CAPTURE_CONCURRENCY` | auto | Story pages Chromium renders at once. Auto starts at one per CPU. Set it to 2 on 1 vCPU, or 4 on 2 vCPU (see Memory and CPU). |
+| `PLAYWRIGHT_SERVER_URL` | required | WebSocket address of the Playwright server, including its `--path`, e.g. `ws://pw:3000/storyshelf`. |
+| `PLAYWRIGHT_SESSIONS` | `1` | Pages rendered at once across the farm. Set it to what the server(s) can take. |
+| `PLAYWRIGHT_SERVER_TOKEN` | none | Bearer token for a reverse proxy in front of the server. |
+| `CAPTURE_SHARD_SIZE` | none | Captures per shard. Needed to spread one build over several servers. |
+| `CAPTURE_CONCURRENCY` | auto | Builds or shards rendered at once; each opens one connection to the server. |
 | `DATA_DIR` | `./data` (`/data` in Docker) | Scratch space where uploaded Storybooks are unpacked during capture. It doesn't need to persist. |
 | `SECRET` | required | Signs sessions and encrypts stored credentials. Use at least 32 characters. |
 | `AUTH_PASSWORD` | required | Password for the local admin account (at least 12 characters). Re-applied on every boot. |

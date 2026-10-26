@@ -7,6 +7,7 @@ import { slackWebhookNotifier } from "@storyshelf/notify-chat/slack";
 import { otelLogMixin } from "@storyshelf/observability";
 import { initObservabilityFromEnv } from "@storyshelf/observability/node";
 import { createPlaywrightCaptureRunner } from "@storyshelf/runner-playwright";
+import { playwrightServer } from "@storyshelf/runner-playwright/remote";
 import { createS3Storage } from "@storyshelf/storage-s3";
 import postgres from "postgres";
 
@@ -17,6 +18,7 @@ export async function createShelfOptions(): Promise<ShelfOptions> {
     "AUTH_PASSWORD",
     "DATABASE_URL",
     "S3_BUCKET",
+    "PLAYWRIGHT_SERVER_URL",
   ].filter((name) => !process.env[name]);
   if (missing.length > 0) {
     throw new Error(
@@ -53,7 +55,20 @@ export async function createShelfOptions(): Promise<ShelfOptions> {
       ? ("require" as unknown as boolean)
       : undefined;
   const database = createPostgresDatabase({ url: databaseUrl, ssl });
-  const captureRunner = createPlaywrightCaptureRunner();
+  // Chromium runs on a separate Playwright server, so this host installs no browsers. The target is
+  // `chromium@grid` and has its own baselines. `sessions` is the total pages rendered at once, across
+  // every shard, so set it to what the server (or the load balancer in front of several) can take.
+  const captureRunner = createPlaywrightCaptureRunner({
+    browsers: [
+      playwrightServer({
+        name: "grid",
+        endpoint: process.env.PLAYWRIGHT_SERVER_URL!,
+        token: process.env.PLAYWRIGHT_SERVER_TOKEN || undefined,
+        engines: ["chromium"],
+        sessions: Number(process.env.PLAYWRIGHT_SESSIONS) || 1,
+      }),
+    ],
+  });
   const auth = createShelfAuth({
     db: database,
     secret,
@@ -66,7 +81,13 @@ export async function createShelfOptions(): Promise<ShelfOptions> {
   return {
     database,
     storage,
-    testing: { runner: captureRunner },
+    testing: {
+      runner: captureRunner,
+      // Builds (or shards) rendered at once; each opens one connection to the Playwright server.
+      concurrency: Number(process.env.CAPTURE_CONCURRENCY) || undefined,
+      // Captures per shard. Unset keeps a build in one job, so it uses a single server connection.
+      shardSize: Number(process.env.CAPTURE_SHARD_SIZE) || undefined,
+    },
     notifications: { notifiers: [slackWebhookNotifier, gitHubNotifier] },
     auth: auth.adapter,
     logger,
