@@ -44,22 +44,28 @@ Check it is up:
 curl localhost:3000/api/v1/health
 ```
 
-### Memory
+### Memory and CPU
 
-**Run with at least 2GB of RAM.** Chromium is the main memory cost, and real design systems use far more than a small fixture:
+StoryShelf 0.7 sizes its own capture from the CPUs and memory it sees, so memory stays flat as the story count grows. Capture is **CPU-bound**: memory is not the limit. Measured with a 555-story design system (full capture, no failures in any run):
 
-| Storybook | Container memory | Result |
-|---|---|---|
-| 7 stories | 1GB | Peak about 330-430MiB. |
-| 555 stories (heavy) | 1GB | Chromium pages crash (`Target crashed`) and the container is killed (OOM). |
-| 555 stories (heavy) | 2GB | All stories captured, no failures. Peak about 1.9GB. |
+| Container | Pages at once | Time | Peak memory |
+|---|---|---|---|
+| 1 vCPU, 2GB | auto | 793s | 923MiB |
+| 1 vCPU, 2GB | **2** | **618s** | 755MiB |
+| 1 vCPU, 2GB | 3 | 855s | 818MiB |
+| 2 vCPU, 4GB | auto | 391s | 1095MiB |
+| 2 vCPU, 4GB | **4** | **313s** | 942MiB |
+| 2 vCPU, 4GB | 8 | 304s | 1351MiB |
+| 2 vCPU, 4GB | auto, build split into 2 shards run in parallel | 384s | 910MiB |
 
 Notes:
-- CPU matters as much as RAM. On 1 vCPU the 555-story capture took about 17 minutes. That is over StoryShelf's built-in 15 minute render limit, so the Dockerfile raises it (see `RENDER_TIMEOUT_MS`). A first capture on 1 vCPU is slow; later builds render only affected stories.
-- A project's first build has no baseline and renders every story, which is the heaviest case. Later builds render only the stories affected by the change.
-- Stories are rendered in batches of `CAPTURE_MAX_PAGES` pages at a time, so Chromium's memory stays bounded as the story count grows. Every screenshot is still held in memory until the render finishes, so memory grows with the story count.
-- A memory-starved capture can fail with no error in the UI. The build shows `Interrupted by server restart`, and the container log is the only place to see the cause. Check the app's memory graph if builds fail without a message.
-- To cut memory further, skip stories you don't need with `--skip <glob>` on `storyshelf upload`, or use fewer viewports.
+- **Set the number of pages explicitly.** The automatic setting starts at one page per CPU. `STORYSHELF_CAPTURE_CONCURRENCY=2` on 1 vCPU and `=4` on 2 vCPU were 20-25% faster than auto. More than that does not help: 3 pages on 1 vCPU was slower than 2, and 8 pages on 2 vCPU used 400MiB more for 3% less time.
+- **Extra RAM is not used.** Every run peaked at or under about 1.35GB, so 2GB is plenty even on 2 vCPU. Pay for CPU, not memory.
+- **More CPU helps almost linearly:** 2 vCPU was about twice as fast as 1 vCPU.
+- **Sharding does not help on one host.** Splitting a build into shards only helps when shards run on different machines.
+- A project's first build has no baseline and renders every story. Later builds render only the affected stories, if the built Storybook includes `preview-stats.json` (see `storyshelf doctor`).
+- The render time budget scales with the number of captures (at least 15 minutes), so there is no timeout setting to change.
+- To cut work, skip stories with `--skip <glob>` on `storyshelf upload`, or use fewer viewports.
 
 ## Configuration
 
@@ -72,8 +78,7 @@ Notes:
 | `S3_REGION` | `auto` | Use `auto` for R2. |
 | `S3_PREFIX` | none | Optional key prefix inside the bucket. |
 | `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` | required | S3 or R2 API token credentials. |
-| `CAPTURE_MAX_PAGES` | `6` | Most story pages Chromium renders at once. Stories are captured in batches of this size, so peak memory stays flat for large Storybooks. Lower it if the container is killed mid-capture. |
-| `RENDER_TIMEOUT_MS` | `2700000` (45 min) in Docker | Time budget for rendering one build. StoryShelf's built-in limit is 15 minutes and isn't configurable, so the Dockerfile patches it to read this variable. |
+| `STORYSHELF_CAPTURE_CONCURRENCY` | auto | Story pages Chromium renders at once. Auto starts at one per CPU. Set it to 2 on 1 vCPU, or 4 on 2 vCPU (see Memory and CPU). |
 | `DATA_DIR` | `./data` (`/data` in Docker) | Scratch space where uploaded Storybooks are unpacked during capture. It doesn't need to persist. |
 | `SECRET` | required | Signs sessions and encrypts stored credentials. Use at least 32 characters. |
 | `AUTH_PASSWORD` | required | Password for the local admin account (at least 12 characters). Re-applied on every boot. |

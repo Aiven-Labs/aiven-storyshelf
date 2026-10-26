@@ -8,10 +8,10 @@ const app = createShelfApp(options);
 
 await app.lifecycle.setup();
 const adminEmail = await ensureAdmin(options.database);
-options.logger.info({ email: adminEmail }, "Local admin login enabled");
+app.lifecycle.logger.info({ email: adminEmail }, "Local admin login enabled");
 
 const server = serve({ fetch: app.fetch, port }, () => {
-  options.logger.info({ port }, "StoryShelf server listening");
+  app.lifecycle.logger.info({ port }, "StoryShelf server listening");
 });
 
 const shutdown = async () => {
