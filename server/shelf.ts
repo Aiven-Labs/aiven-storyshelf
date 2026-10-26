@@ -7,7 +7,7 @@ import { slackWebhookNotifier } from "@storyshelf/notify-chat/slack";
 import { otelLogMixin } from "@storyshelf/observability";
 import { initObservabilityFromEnv } from "@storyshelf/observability/node";
 import { createPlaywrightCaptureRunner } from "@storyshelf/runner-playwright";
-import { playwrightServer } from "@storyshelf/runner-playwright/remote";
+import { azurePlaywright, playwrightServer } from "@storyshelf/runner-playwright/remote";
 import { createS3Storage } from "@storyshelf/storage-s3";
 import postgres from "postgres";
 
@@ -60,19 +60,29 @@ export async function createShelfOptions(): Promise<ShelfOptions> {
     .split(",")
     .map((name) => name.trim())
     .filter(Boolean) as ("chromium" | "firefox" | "webkit")[];
+  const sessions = Number(process.env.PLAYWRIGHT_SESSIONS) || 1;
+  const azureUrl = process.env.PLAYWRIGHT_SERVICE_URL;
+  const azureToken = process.env.PLAYWRIGHT_SERVICE_ACCESS_TOKEN;
   const serverUrl = process.env.PLAYWRIGHT_SERVER_URL;
+  if (azureUrl && !azureToken) {
+    throw new Error("PLAYWRIGHT_SERVICE_URL is set but PLAYWRIGHT_SERVICE_ACCESS_TOKEN is missing");
+  }
+  // Rendering target, in order of preference: Azure Playwright Workspaces (`<engine>@azure`), a self-hosted
+  // Playwright server (`<engine>@grid`), else the engines installed on this host.
   const captureRunner = createPlaywrightCaptureRunner({
-    browsers: serverUrl
-      ? [
-          playwrightServer({
-            name: "grid",
-            endpoint: serverUrl,
-            token: process.env.PLAYWRIGHT_SERVER_TOKEN || undefined,
-            engines,
-            sessions: Number(process.env.PLAYWRIGHT_SESSIONS) || 1,
-          }),
-        ]
-      : engines,
+    browsers: azureUrl
+      ? [azurePlaywright({ endpoint: azureUrl, token: azureToken!, os: "linux", engines, sessions })]
+      : serverUrl
+        ? [
+            playwrightServer({
+              name: "grid",
+              endpoint: serverUrl,
+              token: process.env.PLAYWRIGHT_SERVER_TOKEN || undefined,
+              engines,
+              sessions,
+            }),
+          ]
+        : engines,
   });
   const auth = createShelfAuth({
     db: database,

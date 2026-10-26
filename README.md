@@ -89,6 +89,7 @@ Notes:
 | `S3_PREFIX` | none | Optional key prefix inside the bucket. |
 | `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` | required | S3 or R2 API token credentials. |
 | `PLAYWRIGHT_SERVER_URL` | required | WebSocket address of the Playwright server, including its `--path`, e.g. `ws://pw:3000/storyshelf`. |
+| `PLAYWRIGHT_SERVICE_URL` / `PLAYWRIGHT_SERVICE_ACCESS_TOKEN` | none | Azure Playwright Workspaces browser endpoint and access token. When set, renders run on Azure as `chromium@azure` (takes precedence over `PLAYWRIGHT_SERVER_URL`). See `benchmark/README.md` for the trial. |
 | `PLAYWRIGHT_SESSIONS` | `1` | Pages rendered at once across the farm. Set it to what the server(s) can take. |
 | `PLAYWRIGHT_SERVER_TOKEN` | none | Bearer token for a reverse proxy in front of the server. |
 | `CAPTURE_SHARD_SIZE` | none | Captures per shard. Needed to spread one build over several servers. |

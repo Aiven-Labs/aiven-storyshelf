@@ -127,9 +127,10 @@ def cmd_report(args):
     waited = json.load(open(f"{run}/wait.json"))
     lines = [f"# Benchmark: {meta['label']}", ""]
     lines += [f"- Date: {meta['date']}", f"- Commit: `{meta['commit']}`", f"- Mode: **{meta['mode']}**",
-              f"- Builds at once: {meta['builds']}   Pages at once: {meta['pages']}",
+              f"- Builds at once: {meta['builds']}   Pages at once: {meta['pages']}   Shard size: {meta.get('shard_size') or 'none'}",
               f"- App host: {meta['app_cpus']} vCPU / {meta['app_mem']}"
-              + (f"   Playwright server: {meta['server_cpus']} vCPU / {meta['server_mem']}" if meta["mode"] == "remote" else ""),
+              + (f"   Playwright server: {meta['server_cpus']} vCPU / {meta['server_mem']}" if meta["mode"] == "remote" else "")
+              + ("   Browsers: Azure Playwright Workspaces (billed per second of test minutes: compare with the workspace usage page)" if meta["mode"] == "azure" else ""),
               f"- Storybook: `{meta['storybook']}` ({meta.get('stories', '?')} stories)", ""]
     seconds = [b["seconds"] for b in waited.values()]
     lines += ["## Builds", "", "| Project | Status | Snapshots | Finished after |", "|---|---|---|---|"]

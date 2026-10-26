@@ -2,18 +2,22 @@
 # Run one benchmark: upload several Storybook builds at the same time and measure how long they take, what the
 # containers use, and how responsive the app stays meanwhile.
 #
-#   benchmark/run.sh <local|remote> [label]
+#   benchmark/run.sh <local|remote|azure> [label]
 #
 # Settings come from the environment or benchmark/.env (see .env.example). The report is written to
 # benchmark/results/<timestamp>-<label>.md; raw data stays in benchmark/results/<timestamp>-<label>/.
-# KEEP=1 leaves the stack running afterwards.
+# KEEP=1 leaves the stack running afterwards. UPLOAD_ARGS adds options to `storyshelf upload` (for example
+# --skip '<glob>' to render fewer stories and save Azure free minutes). SHARD_SIZE splits each build into shards.
 set -eo pipefail
 
 HERE=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 ROOT=$(dirname "$HERE")
-MODE=${1:?usage: run.sh <local|remote> [label]}
+MODE=${1:?usage: run.sh <local|remote|azure> [label]}
 LABEL=${2:-$MODE}
-case "$MODE" in local|remote) ;; *) echo "mode must be local or remote" >&2; exit 2 ;; esac
+case "$MODE" in local|remote|azure) ;; *) echo "mode must be local, remote or azure" >&2; exit 2 ;; esac
+if [ "$MODE" = azure ] && { [ -z "$PLAYWRIGHT_SERVICE_URL" ] || [ -z "$PLAYWRIGHT_SERVICE_ACCESS_TOKEN" ]; }; then
+  echo "azure mode needs PLAYWRIGHT_SERVICE_URL and PLAYWRIGHT_SERVICE_ACCESS_TOKEN in the environment." >&2; exit 2
+fi
 
 # Load benchmark/.env without overriding variables already set in the environment.
 if [ -f "$HERE/.env" ]; then
@@ -22,7 +26,12 @@ if [ -f "$HERE/.env" ]; then
     [ -z "${!key+x}" ] && export "$key=$value"
   done < "$HERE/.env"
 fi
-if [ "$MODE" = local ]; then export APP_CPUS=${APP_CPUS:-2} APP_MEM=${APP_MEM:-4g}; else export APP_CPUS=${APP_CPUS:-1} APP_MEM=${APP_MEM:-1g}; fi
+case "$MODE" in
+  local) export APP_CPUS=${APP_CPUS:-2} APP_MEM=${APP_MEM:-4g} ;;
+  remote) export APP_CPUS=${APP_CPUS:-1} APP_MEM=${APP_MEM:-1g} ;;
+  azure) export APP_CPUS=${APP_CPUS:-1} APP_MEM=${APP_MEM:-2g} ;;
+esac
+export SHARD_SIZE=${SHARD_SIZE:-}
 export SERVER_CPUS=${SERVER_CPUS:-2} SERVER_MEM=${SERVER_MEM:-4g} PAGES=${PAGES:-4} BUILDS=${BUILDS:-3}
 export APP_PORT=${APP_PORT:-3000}
 STORYBOOK_DIR=${STORYBOOK_DIR:-../design-system/storybook-static}
@@ -65,6 +74,8 @@ for i in $(seq 1 "$BUILDS"); do
   # Remote projects must render on the Playwright server's target; local ones keep the default `chromium`.
   if [ "$MODE" = remote ]; then
     curl -s -b "$JAR" -X PATCH "$BASE/api/v1/projects/$slug" "${HDR[@]}" -d '{"browser":"chromium@grid"}' -o /dev/null
+  elif [ "$MODE" = azure ]; then
+    curl -s -b "$JAR" -X PATCH "$BASE/api/v1/projects/$slug" "${HDR[@]}" -d '{"browser":"chromium@azure"}' -o /dev/null
   fi
   token=$(curl -s -b "$JAR" -X POST "$BASE/api/v1/projects/$slug/tokens" "${HDR[@]}" -d '{"name":"ci"}' \
     | python3 -c 'import sys,json;print(json.load(sys.stdin)["token"])')
@@ -87,7 +98,7 @@ UPLOADS=()
 for i in $(seq 1 "$BUILDS"); do
   token=${PAIRS[$((i-1))]#*=}
   ( cd "$(dirname "$SB")" && npx -y storyshelf@0.7.0 upload --url "$BASE" --slug "bench-$i" --token "$token" \
-      --sha "bench-$i" --branch main --build-dir "$SB" > "$OUT/upload-$i.log" 2>&1 ) &
+      --sha "bench-$i" --branch main --build-dir "$SB" $UPLOAD_ARGS > "$OUT/upload-$i.log" 2>&1 ) &
   UPLOADS+=($!)
 done
 for pid in "${UPLOADS[@]}"; do wait "$pid" || echo "an upload failed; see $OUT/upload-*.log"; done
@@ -112,7 +123,7 @@ commit=subprocess.run(["git","-C","$ROOT","rev-parse","--short","HEAD"],capture_
 json.dump({"label":"$LABEL","mode":"$MODE","date":datetime.datetime.now().strftime("%Y-%m-%d %H:%M"),"commit":commit,
  "builds":$BUILDS,"pages":$PAGES,"app_cpus":"$APP_CPUS","app_mem":"$APP_MEM",
  "server_cpus":"$SERVER_CPUS","server_mem":"$SERVER_MEM","storybook":"$STORYBOOK_DIR","stories":"$STORIES",
- "failures":"$FAILURES","oom":"$OOM"},open(sys.argv[1],"w"),indent=2)
+ "shard_size":"$SHARD_SIZE","upload_args":"$UPLOAD_ARGS","failures":"$FAILURES","oom":"$OOM"},open(sys.argv[1],"w"),indent=2)
 PY
 python3 "$HERE/lib/bench.py" report --dir "$OUT" | tee "$HERE/results/$RUN_ID.md"
 echo "== report: benchmark/results/$RUN_ID.md"

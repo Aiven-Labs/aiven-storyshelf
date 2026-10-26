@@ -1,5 +1,5 @@
-# Benchmark stack: Postgres + an S3 mock + the app, rendering either locally (profile `local`) or on a
-# separate Playwright server (profile `remote`). Driven by run.sh; sizes come from benchmark/.env or the
+# Benchmark stack: Postgres + an S3 mock + the app, rendering locally (profile `local`), on a separate
+# Playwright server (profile `remote`) or on Azure Playwright Workspaces (profile `azure`). Driven by run.sh; sizes come from benchmark/.env or the
 # environment. Only one profile runs at a time (both apps publish APP_PORT).
 name: ss-bench
 
@@ -12,8 +12,10 @@ x-app-env: &app-env
   AWS_ACCESS_KEY_ID: x
   AWS_SECRET_ACCESS_KEY: y
   PUBLIC_BASE_URL: http://localhost:${APP_PORT:-3000}
-  # Builds captured at once (one render each).
-  CAPTURE_CONCURRENCY: ${BUILDS:-3}
+  # Renders at once, each on its own connection: builds, or shards when SHARD_SIZE splits a build.
+  CAPTURE_CONCURRENCY: ${CONNECTIONS:-${BUILDS:-3}}
+  # Captures per shard (empty = one job per build). Needed to spread one build over several connections.
+  CAPTURE_SHARD_SIZE: ${SHARD_SIZE:-}
 
 services:
   postgres:
@@ -86,6 +88,29 @@ services:
       <<: *app-env
       PLAYWRIGHT_SERVER_URL: ws://playwright:3000/storyshelf
       # Pages rendered at once across all builds, on the server.
+      PLAYWRIGHT_SESSIONS: ${PAGES:-4}
+    ports:
+      - "${APP_PORT:-3000}:3000"
+
+  # Renders on Azure Playwright Workspaces (target `chromium@azure`); no browser installed here and no local
+  # Playwright server. Needs PLAYWRIGHT_SERVICE_URL and PLAYWRIGHT_SERVICE_ACCESS_TOKEN in the environment (run.sh checks).
+  app-azure:
+    profiles: [azure]
+    build:
+      context: ..
+    image: ss-bench-app-remote
+    cpus: ${APP_CPUS:-1}
+    mem_limit: ${APP_MEM:-2g}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      s3:
+        condition: service_started
+    environment:
+      <<: *app-env
+      PLAYWRIGHT_SERVICE_URL: ${PLAYWRIGHT_SERVICE_URL:-}
+      PLAYWRIGHT_SERVICE_ACCESS_TOKEN: ${PLAYWRIGHT_SERVICE_ACCESS_TOKEN:-}
+      # Pages rendered at once across all connections (billed by duration, so more pages do not cost more).
       PLAYWRIGHT_SESSIONS: ${PAGES:-4}
     ports:
       - "${APP_PORT:-3000}:3000"
