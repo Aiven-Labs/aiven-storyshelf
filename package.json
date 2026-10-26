@@ -14,18 +14,19 @@
   },
   "dependencies": {
     "@hono/node-server": "^1.17.0",
-    "postgres": "^3.4.9",
-    "@storyshelf/core": "0.7.0",
     "@storyshelf/app": "0.7.0",
     "@storyshelf/auth": "0.7.0",
-    "@storyshelf/observability": "0.7.0",
+    "@storyshelf/core": "0.7.0",
     "@storyshelf/db-postgres": "0.7.0",
-    "@storyshelf/runner-playwright": "0.7.0",
+    "@storyshelf/notify-chat": "0.7.0",
     "@storyshelf/notify-git": "0.7.0",
+    "@storyshelf/observability": "0.7.0",
+    "@storyshelf/runner-playwright": "0.7.0",
     "@storyshelf/storage-s3": "0.7.0",
-    "@storyshelf/notify-chat": "0.7.0"
+    "postgres": "^3.4.9"
   },
   "devDependencies": {
+    "@types/node": "^24.19.2",
     "typescript": "^7.0.2"
   }
 }

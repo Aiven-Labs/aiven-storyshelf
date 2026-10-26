@@ -46,16 +46,24 @@ curl localhost:3000/api/v1/health
 
 ### Memory and CPU
 
-StoryShelf 0.7 sizes its own capture (one page at a time on 1 vCPU, and it restarts the browser periodically), so memory stays flat as the story count grows. Measured with a 555-story design system on 1 vCPU and 2GB:
+StoryShelf 0.7 sizes its own capture from the CPUs and memory it sees, so memory stays flat as the story count grows. Capture is **CPU-bound**: memory is not the limit. Measured with a 555-story design system (full capture, no failures in any run):
 
-| Storybook | Container | Result |
-|---|---|---|
-| 555 stories (heavy) | 1 vCPU, 2GB | All stories captured and approved, no failures. About 14 minutes, peak about 690MiB. |
+| Container | Pages at once | Time | Peak memory |
+|---|---|---|---|
+| 1 vCPU, 2GB | auto | 793s | 923MiB |
+| 1 vCPU, 2GB | **2** | **618s** | 755MiB |
+| 1 vCPU, 2GB | 3 | 855s | 818MiB |
+| 2 vCPU, 4GB | auto | 391s | 1095MiB |
+| 2 vCPU, 4GB | **4** | **313s** | 942MiB |
+| 2 vCPU, 4GB | 8 | 304s | 1351MiB |
+| 2 vCPU, 4GB | auto, build split into 2 shards run in parallel | 384s | 910MiB |
 
 Notes:
-- Capture is CPU-bound: on 1 vCPU, expect roughly 1.5 seconds per story for the first full build.
+- **Set the number of pages explicitly.** The automatic setting starts at one page per CPU. `STORYSHELF_CAPTURE_CONCURRENCY=2` on 1 vCPU and `=4` on 2 vCPU were 20-25% faster than auto. More than that does not help: 3 pages on 1 vCPU was slower than 2, and 8 pages on 2 vCPU used 400MiB more for 3% less time.
+- **Extra RAM is not used.** Every run peaked at or under about 1.35GB, so 2GB is plenty even on 2 vCPU. Pay for CPU, not memory.
+- **More CPU helps almost linearly:** 2 vCPU was about twice as fast as 1 vCPU.
+- **Sharding does not help on one host.** Splitting a build into shards only helps when shards run on different machines.
 - A project's first build has no baseline and renders every story. Later builds render only the affected stories, if the built Storybook includes `preview-stats.json` (see `storyshelf doctor`).
-- Plan for 2GB. It was not tested below that on 0.7, but the peak was well under 1GB, so 1GB may work for similar Storybooks.
 - The render time budget scales with the number of captures (at least 15 minutes), so there is no timeout setting to change.
 - To cut work, skip stories with `--skip <glob>` on `storyshelf upload`, or use fewer viewports.
 
@@ -70,7 +78,7 @@ Notes:
 | `S3_REGION` | `auto` | Use `auto` for R2. |
 | `S3_PREFIX` | none | Optional key prefix inside the bucket. |
 | `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` | required | S3 or R2 API token credentials. |
-| `CAPTURE_CONCURRENCY` | `1` | Captures run at once. Concurrent captures share the CPU and add up their memory, so keep it at 1 on small hosts. Within a capture, StoryShelf sizes the number of open pages from the available CPU and memory itself. |
+| `STORYSHELF_CAPTURE_CONCURRENCY` | auto | Story pages Chromium renders at once. Auto starts at one per CPU. Set it to 2 on 1 vCPU, or 4 on 2 vCPU (see Memory and CPU). |
 | `DATA_DIR` | `./data` (`/data` in Docker) | Scratch space where uploaded Storybooks are unpacked during capture. It doesn't need to persist. |
 | `SECRET` | required | Signs sessions and encrypts stored credentials. Use at least 32 characters. |
 | `AUTH_PASSWORD` | required | Password for the local admin account (at least 12 characters). Re-applied on every boot. |
