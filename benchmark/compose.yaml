@@ -1,0 +1,91 @@
+# Benchmark stack: Postgres + an S3 mock + the app, rendering either locally (profile `local`) or on a
+# separate Playwright server (profile `remote`). Driven by run.sh; sizes come from benchmark/.env or the
+# environment. Only one profile runs at a time (both apps publish APP_PORT).
+name: ss-bench
+
+x-app-env: &app-env
+  SECRET: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+  AUTH_PASSWORD: test-admin-password-123
+  DATABASE_URL: postgres://postgres:pw@postgres:5432/shelf
+  S3_BUCKET: shelf
+  S3_ENDPOINT: http://s3:9090
+  AWS_ACCESS_KEY_ID: x
+  AWS_SECRET_ACCESS_KEY: y
+  PUBLIC_BASE_URL: http://localhost:${APP_PORT:-3000}
+  # Builds captured at once (one render each).
+  CAPTURE_CONCURRENCY: ${BUILDS:-3}
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_PASSWORD: pw
+      POSTGRES_DB: shelf
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d shelf"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
+  s3:
+    image: adobe/s3mock
+    environment:
+      COM_ADOBE_TESTING_S3MOCK_STORE_INITIAL_BUCKETS: shelf
+
+  # Chromium for the remote target (`chromium@grid`). Pinned to the runner's playwright-core version.
+  playwright:
+    profiles: [remote]
+    build:
+      context: ../playwright-server
+    image: ss-bench-playwright
+    init: true
+    ipc: host
+    cpus: ${SERVER_CPUS:-2}
+    mem_limit: ${SERVER_MEM:-4g}
+    environment:
+      PLAYWRIGHT_MAX_CLIENTS: "32"
+
+  # Renders on this host: the image installs Chromium.
+  app-local:
+    profiles: [local]
+    build:
+      context: ..
+      args:
+        BROWSERS: chromium
+    image: ss-bench-app-local
+    cpus: ${APP_CPUS:-2}
+    mem_limit: ${APP_MEM:-4g}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      s3:
+        condition: service_started
+    environment:
+      <<: *app-env
+      # Pages rendered at once across all builds.
+      STORYSHELF_CAPTURE_CONCURRENCY: ${PAGES:-4}
+    ports:
+      - "${APP_PORT:-3000}:3000"
+
+  # Renders on the Playwright server: the image installs no browser.
+  app-remote:
+    profiles: [remote]
+    build:
+      context: ..
+    image: ss-bench-app-remote
+    cpus: ${APP_CPUS:-1}
+    mem_limit: ${APP_MEM:-1g}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      s3:
+        condition: service_started
+      playwright:
+        condition: service_started
+    environment:
+      <<: *app-env
+      PLAYWRIGHT_SERVER_URL: ws://playwright:3000/storyshelf
+      # Pages rendered at once across all builds, on the server.
+      PLAYWRIGHT_SESSIONS: ${PAGES:-4}
+    ports:
+      - "${APP_PORT:-3000}:3000"
