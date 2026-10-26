@@ -18,7 +18,6 @@ export async function createShelfOptions(): Promise<ShelfOptions> {
     "AUTH_PASSWORD",
     "DATABASE_URL",
     "S3_BUCKET",
-    "PLAYWRIGHT_SERVER_URL",
   ].filter((name) => !process.env[name]);
   if (missing.length > 0) {
     throw new Error(
@@ -55,19 +54,25 @@ export async function createShelfOptions(): Promise<ShelfOptions> {
       ? ("require" as unknown as boolean)
       : undefined;
   const database = createPostgresDatabase({ url: databaseUrl, ssl });
-  // Chromium runs on a separate Playwright server, so this host installs no browsers. The target is
-  // `chromium@grid` and has its own baselines. `sessions` is the total pages rendered at once, across
-  // every shard, so set it to what the server (or the load balancer in front of several) can take.
+  // Engines to offer. Remote: they run on the Playwright server (targets `<engine>@grid`); local: they run
+  // on this host and must be installed in the image (see the BROWSERS build arg).
+  const engines = (process.env.PLAYWRIGHT_ENGINES || "chromium")
+    .split(",")
+    .map((name) => name.trim())
+    .filter(Boolean) as ("chromium" | "firefox" | "webkit")[];
+  const serverUrl = process.env.PLAYWRIGHT_SERVER_URL;
   const captureRunner = createPlaywrightCaptureRunner({
-    browsers: [
-      playwrightServer({
-        name: "grid",
-        endpoint: process.env.PLAYWRIGHT_SERVER_URL!,
-        token: process.env.PLAYWRIGHT_SERVER_TOKEN || undefined,
-        engines: ["chromium"],
-        sessions: Number(process.env.PLAYWRIGHT_SESSIONS) || 1,
-      }),
-    ],
+    browsers: serverUrl
+      ? [
+          playwrightServer({
+            name: "grid",
+            endpoint: serverUrl,
+            token: process.env.PLAYWRIGHT_SERVER_TOKEN || undefined,
+            engines,
+            sessions: Number(process.env.PLAYWRIGHT_SESSIONS) || 1,
+          }),
+        ]
+      : engines,
   });
   const auth = createShelfAuth({
     db: database,
