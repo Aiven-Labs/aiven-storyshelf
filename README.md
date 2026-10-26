@@ -44,22 +44,20 @@ Check it is up:
 curl localhost:3000/api/v1/health
 ```
 
-### Memory
+### Memory and CPU
 
-**Run with at least 2GB of RAM.** Chromium is the main memory cost, and real design systems use far more than a small fixture:
+StoryShelf 0.7 sizes its own capture (one page at a time on 1 vCPU, and it restarts the browser periodically), so memory stays flat as the story count grows. Measured with a 555-story design system on 1 vCPU and 2GB:
 
-| Storybook | Container memory | Result |
+| Storybook | Container | Result |
 |---|---|---|
-| 7 stories | 1GB | Peak about 330-430MiB. |
-| 555 stories (heavy) | 1GB | Chromium pages crash (`Target crashed`) and the container is killed (OOM). |
-| 555 stories (heavy) | 2GB | All stories captured, no failures. Peak about 1.9GB. |
+| 555 stories (heavy) | 1 vCPU, 2GB | All stories captured and approved, no failures. About 14 minutes, peak about 690MiB. |
 
 Notes:
-- CPU matters as much as RAM. On 1 vCPU the 555-story capture took about 17 minutes. That is over StoryShelf's built-in 15 minute render limit, so the Dockerfile raises it (see `RENDER_TIMEOUT_MS`). A first capture on 1 vCPU is slow; later builds render only affected stories.
-- A project's first build has no baseline and renders every story, which is the heaviest case. Later builds render only the stories affected by the change.
-- Stories are rendered in batches of `CAPTURE_MAX_PAGES` pages at a time, so Chromium's memory stays bounded as the story count grows. Every screenshot is still held in memory until the render finishes, so memory grows with the story count.
-- A memory-starved capture can fail with no error in the UI. The build shows `Interrupted by server restart`, and the container log is the only place to see the cause. Check the app's memory graph if builds fail without a message.
-- To cut memory further, skip stories you don't need with `--skip <glob>` on `storyshelf upload`, or use fewer viewports.
+- Capture is CPU-bound: on 1 vCPU, expect roughly 1.5 seconds per story for the first full build.
+- A project's first build has no baseline and renders every story. Later builds render only the affected stories, if the built Storybook includes `preview-stats.json` (see `storyshelf doctor`).
+- Plan for 2GB. It was not tested below that on 0.7, but the peak was well under 1GB, so 1GB may work for similar Storybooks.
+- The render time budget scales with the number of captures (at least 15 minutes), so there is no timeout setting to change.
+- To cut work, skip stories with `--skip <glob>` on `storyshelf upload`, or use fewer viewports.
 
 ## Configuration
 
@@ -72,8 +70,7 @@ Notes:
 | `S3_REGION` | `auto` | Use `auto` for R2. |
 | `S3_PREFIX` | none | Optional key prefix inside the bucket. |
 | `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` | required | S3 or R2 API token credentials. |
-| `CAPTURE_MAX_PAGES` | `6` | Most story pages Chromium renders at once. Stories are captured in batches of this size, so peak memory stays flat for large Storybooks. Lower it if the container is killed mid-capture. |
-| `RENDER_TIMEOUT_MS` | `2700000` (45 min) in Docker | Time budget for rendering one build. StoryShelf's built-in limit is 15 minutes and isn't configurable, so the Dockerfile patches it to read this variable. |
+| `CAPTURE_CONCURRENCY` | `1` | Captures run at once. Concurrent captures share the CPU and add up their memory, so keep it at 1 on small hosts. Within a capture, StoryShelf sizes the number of open pages from the available CPU and memory itself. |
 | `DATA_DIR` | `./data` (`/data` in Docker) | Scratch space where uploaded Storybooks are unpacked during capture. It doesn't need to persist. |
 | `SECRET` | required | Signs sessions and encrypts stored credentials. Use at least 32 characters. |
 | `AUTH_PASSWORD` | required | Password for the local admin account (at least 12 characters). Re-applied on every boot. |

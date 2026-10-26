@@ -1,14 +1,4 @@
 allowBuilds:
   protobufjs: true
 minimumReleaseAgeExclude:
-  - '@storyshelf/affected@0.6.2'
-  - '@storyshelf/app@0.6.2'
-  - '@storyshelf/core@0.6.2'
-  - '@storyshelf/db-postgres@0.6.2'
-  - '@storyshelf/git-github@0.6.2'
-  - '@storyshelf/notify-chat@0.6.2'
-  - '@storyshelf/observability@0.6.2'
-  - '@storyshelf/runner-playwright@0.6.2'
-  - '@storyshelf/storage-local@0.6.2'
-  - '@storyshelf/db-sqlite@0.6.2'
-  - '@storyshelf/auth@0.6.2'
+  - '@storyshelf/*'
