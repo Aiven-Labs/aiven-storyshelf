@@ -1,9 +1,11 @@
 import { createAuthSystemHook, type ShelfOptions } from "@storyshelf/app";
 import { createShelfAuth, ensurePasswordAdmin } from "@storyshelf/auth";
+import {
+  gitHubNotifier,
+  slackWebhookNotifier,
+} from "@storyshelf/core/integrations";
 import { createShelfLogger } from "@storyshelf/core/logger";
 import { createPostgresDatabase } from "@storyshelf/db-postgres";
-import { gitHubNotifier } from "@storyshelf/notify-git";
-import { slackWebhookNotifier } from "@storyshelf/notify-chat/slack";
 import { otelLogMixin } from "@storyshelf/observability";
 import { initObservabilityFromEnv } from "@storyshelf/observability/node";
 import { createPlaywrightCaptureRunner } from "@storyshelf/runner-playwright";
